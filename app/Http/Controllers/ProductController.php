@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except('index', 'show');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -28,6 +32,7 @@ class ProductController extends Controller
      */
     public function store(ProductRequest $request)
     {
+        $this->authorize('isModerator');
         $product = Product::create($request->toArray());
 
         return response()->json([
@@ -54,9 +59,15 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        //
+        $this->authorize('isAdmin');
+        $product->update($request->toArray());
+
+        return response()->json([
+            'message' => 'Product has been updated!',
+            'data' => new SingleProductResource($product)
+        ]);
     }
 
     /**
@@ -67,6 +78,10 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+
+        return response()->json([
+            'message' => 'Product has been deleted!',
+        ]);
     }
 }
